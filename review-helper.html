@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review Us</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700&family=Nunito:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--maroon:#6d1a2b;--maroon2:#8e2a3f;--saffron:#f4a51c;--leaf:#1f7a4d;--ink:#2a1a1d;--mute:#7b6b6e;--paper:#fff;--bg:#f6efe8;--line:#eadfd6}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Nunito,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  .top{background:linear-gradient(160deg,var(--maroon),var(--maroon2));color:#fff;padding:34px 22px 78px;text-align:center;border-radius:0 0 36px 36px}
+  .top small{display:block;font-size:14px;opacity:.85;margin-bottom:6px}
+  h1{font-family:"Baloo 2",Nunito,sans-serif;font-size:34px;line-height:1.1;margin:0 0 8px;font-weight:700}
+  .top p{margin:0;font-size:16px;opacity:.92}
+  .wrap{max-width:440px;margin:-52px auto 0;padding:0 16px 40px}
+  .card{background:var(--paper);border-radius:22px;padding:22px 18px;box-shadow:0 10px 30px rgba(109,26,43,.14)}
+  .stars{display:flex;justify-content:center;gap:6px}
+  .star{font-size:46px;line-height:1;cursor:pointer;color:#e6dcd3;user-select:none;transition:transform .15s,color .15s;-webkit-tap-highlight-color:transparent}
+  .star.on{color:var(--saffron);text-shadow:0 2px 8px rgba(244,165,28,.45)}
+  .star:active{transform:scale(1.25)}
+  #rlabel{text-align:center;font-family:"Baloo 2",sans-serif;font-size:20px;color:var(--maroon);height:30px;margin-top:6px}
+  .hint0{text-align:center;color:var(--mute);font-size:14px;margin:2px 0 0}
+  .step{margin-top:20px;animation:rise .35s ease}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.step{animation:none}}
+  h2{font-size:15px;font-weight:700;margin:0 0 10px;color:var(--ink)}
+  h2 span{font-weight:600;color:var(--mute)}
+  .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .tag{padding:8px 14px;border:1.5px solid var(--line);border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;background:#fff;transition:.15s}
+  .tag.on{background:var(--maroon);color:#fff;border-color:var(--maroon)}
+  .sug{border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:13px 14px;margin-bottom:9px;font-size:15px;line-height:1.5;cursor:pointer;transition:.15s}
+  .sug.sel{border-color:var(--leaf);background:#eff9f3;box-shadow:inset 4px 0 0 var(--leaf)}
+  .alt{background:none;border:0;color:var(--maroon);font:inherit;font-size:14px;font-weight:700;cursor:pointer;padding:4px 0}
+  textarea{width:100%;min-height:110px;border:1.5px solid var(--line);border-radius:14px;padding:12px;font:inherit;font-size:15px;line-height:1.5;resize:vertical;background:#fffdfb}
+  textarea:focus,button:focus-visible,.tag:focus-visible{outline:3px solid rgba(244,165,28,.55);outline-offset:1px}
+  .go{width:100%;margin-top:14px;padding:16px;border:0;border-radius:14px;background:var(--leaf);color:#fff;font:inherit;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(31,122,77,.3)}
+  .go:disabled{background:#b9cfc4;box-shadow:none;cursor:not-allowed}
+  .hint{font-size:13px;color:var(--mute);text-align:center;margin-top:10px;line-height:1.5}
+  .foot{text-align:center;font-size:12px;color:var(--mute);margin-top:16px}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<header class="top">
+  <small>Thanks for dining with us</small>
+  <h1 id="biz"></h1>
+  <p>How was your meal today?</p>
+</header>
+
+<main class="wrap">
+  <div class="card">
+    <div class="stars" id="stars" role="group" aria-label="Star rating"></div>
+    <div id="rlabel" aria-live="polite"></div>
+    <p class="hint0" id="hint0">Tap a star to rate</p>
+
+    <div id="step2" class="hidden">
+      <div class="step">
+        <h2>What did you enjoy? <span>(optional)</span></h2>
+        <div class="tags" id="tags"></div>
+      </div>
+      <div class="step">
+        <h2>Pick a review <span>or write your own</span></h2>
+        <div id="sugs"></div>
+        <button class="alt" id="regen" type="button">↻ Show different suggestions</button>
+        <textarea id="txt" placeholder="Write your review in your own words…"></textarea>
+        <button class="go" id="go" type="button" disabled>Copy review &amp; open Google</button>
+        <div class="hint" id="hint">Your review is copied automatically. On Google, paste it and tap Post.</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot">Your honest feedback helps us improve</div>
+</main>
+
+<script>
+/* ========== EDIT THESE ========== */
+const BUSINESS_NAME = "Raya Resto";
+// Find your Place ID free at: https://developers.google.com/maps/documentation/places/web-service/place-id (Place ID Finder)
+const PLACE_ID = "ChIJD8EDAgBZwjsR9niT_Q7YBcw";
+const DISHES = ["Special Thali", "Dal Tadka", "Paneer dishes"];   // your popular items
+/* ================================= */
+
+const REVIEW_URL = "https://search.google.com/local/writereview?placeid=" + PLACE_ID;
+const TAGS = ["Food", "Service", "Ambience", "Value for money", "Cleanliness", "Staff"];
+
+// Sentence banks per rating bucket. Add more lines to get more variety.
+const T = {
+  hi: {
+    open: ["Had a wonderful time at {b}.", "Absolutely loved my meal at {b}!", "{b} never disappoints.", "Great experience at {b}."],
+    Food: ["The food was fresh, tasty and full of flavour.", "{d} was delicious and perfectly cooked.", "Authentic taste, just like home-cooked food."],
+    Service: ["The service was quick and friendly.", "Staff were polite and attentive."],
+    Ambience: ["Lovely, comfortable atmosphere.", "A clean and welcoming place to sit and eat."],
+    "Value for money": ["Great value for money.", "Very reasonable prices for the quality."],
+    Cleanliness: ["The place is spotlessly clean.", "Hygiene and cleanliness were top-notch."],
+    Staff: ["The staff made us feel really welcome.", "Courteous and helpful team."],
+    close: ["Highly recommended!", "Will definitely visit again.", "Must try if you're in the area!"]
+  },
+  mid: {
+    open: ["Decent experience at {b}.", "{b} was a good visit overall.", "Liked a few things at {b}."],
+    Food: ["The food was good, {d} was tasty.", "Food was fine and fairly priced."],
+    Service: ["Service was okay.", "Staff were helpful, though it got a bit slow at times."],
+    Ambience: ["The seating is comfortable.", "Ambience is simple but fine."],
+    "Value for money": ["Prices are reasonable.", "Fair value for what you get."],
+    Cleanliness: ["Cleanliness was acceptable.", "Reasonably clean place."],
+    Staff: ["Staff were polite.", "The team tried their best."],
+    close: ["Could use a little improvement, but worth a try.", "Would visit again."]
+  },
+  lo: {
+    open: ["My visit to {b} was below expectations.", "Not the best experience at {b}."],
+    Food: ["The food could be better in taste and consistency.", "{d} did not meet expectations."],
+    Service: ["Service was slow and needs improvement.", "Had to wait a long time for service."],
+    Ambience: ["The atmosphere could be improved.", "Seating and ambience need some attention."],
+    "Value for money": ["The pricing didn't feel worth it for me.", "Expected better value for the price."],
+    Cleanliness: ["Cleanliness needs improvement.", "The place could be kept cleaner."],
+    Staff: ["Staff could be more attentive.", "The team needs better coordination."],
+    close: ["Hope the management takes this as feedback.", "I hope things improve on the next visit."]
+  }
+};
+
+let rating = 0, selTags = new Set();
+const LABELS = ["", "Poor", "Fair", "Good", "Very good", "Exceptional"];
+const $ = id => document.getElementById(id);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const fill = s => s.replaceAll("{b}", BUSINESS_NAME).replaceAll("{d}", pick(DISHES));
+
+$("biz").textContent = BUSINESS_NAME;
+document.title = "Review " + BUSINESS_NAME;
+
+// stars
+for (let i = 1; i <= 5; i++) {
+  const s = document.createElement("span");
+  s.className = "star"; s.textContent = "★"; s.dataset.v = i;
+  s.onclick = () => { rating = i; paintStars(); $("rlabel").textContent = LABELS[i]; $("hint0").classList.add("hidden"); document.body.dataset.r = i; $("step2").classList.remove("hidden"); makeSuggestions(); };
+  $("stars").appendChild(s);
+}
+const paintStars = () => document.querySelectorAll(".star").forEach(s => s.classList.toggle("on", +s.dataset.v <= rating));
+
+// tags
+TAGS.forEach(t => {
+  const el = document.createElement("span");
+  el.className = "tag"; el.textContent = t;
+  el.onclick = () => { selTags.has(t) ? selTags.delete(t) : selTags.add(t); el.classList.toggle("on"); makeSuggestions(); };
+  $("tags").appendChild(el);
+});
+
+function makeSuggestions() {
+  const bank = rating >= 4 ? T.hi : rating === 3 ? T.mid : T.lo;
+  const chosen = selTags.size ? [...selTags] : ["Food", "Service"];
+  $("sugs").innerHTML = "";
+  for (let n = 0; n < 3; n++) {
+    const parts = [pick(bank.open)];
+    chosen.slice(0, 3).forEach(t => bank[t] && parts.push(pick(bank[t])));
+    parts.push(pick(bank.close));
+    const text = fill(parts.join(" "));
+    const d = document.createElement("div");
+    d.className = "sug"; d.textContent = text;
+    d.onclick = () => {
+      document.querySelectorAll(".sug").forEach(x => x.classList.remove("sel"));
+      d.classList.add("sel"); $("txt").value = text; $("go").disabled = false;
+    };
+    $("sugs").appendChild(d);
+  }
+}
+$("regen").onclick = makeSuggestions;
+$("txt").oninput = () => $("go").disabled = !$("txt").value.trim();
+
+$("go").onclick = async () => {
+  const text = $("txt").value.trim();
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { // fallback for older browsers
+    $("txt").select(); document.execCommand("copy");
+  }
+  const h = $("hint");
+  h.style.cssText = "font-size:15px;color:#0b7a32;font-weight:600;background:#e8f7ee;border-radius:10px;padding:12px;margin-top:12px";
+  h.innerHTML = "✅ Review copied!<br>On Google, tap the review box and choose <b>Paste</b> (computer: Ctrl+V), then tap <b>Post</b>.<br><br>Opening Google…";
+  $("go").disabled = true;
+  setTimeout(() => { window.location.href = REVIEW_URL; }, 3500);
+};
+</script>
+</body>
+</html>
